@@ -19,3 +19,11 @@ docs/*.bundle
 v4/
 *.zip
 µêÉτëç/
+
+.venv/
+
+# 本机运行产物和配音素材
+/out/
+/assets/footage/
+/assets/voice/
+/series/voices/

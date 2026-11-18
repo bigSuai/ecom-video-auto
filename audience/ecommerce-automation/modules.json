@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "version": "0.2.0",
+  "modules": {
+    "A": {"name": "商品上架", "entrypoint": "listing", "reference": "references/A-listing.md", "tables": ["products"]},
+    "B": {"name": "商品资料检查", "entrypoint": "catalog", "reference": "references/B-catalog.md", "tables": ["products"]},
+    "C": {"name": "营销推广", "entrypoint": "marketing", "reference": "references/C-marketing.md", "tables": ["activities", "keywords"]},
+    "D": {"name": "多平台数据复盘", "entrypoint": "reporting", "reference": "references/D-reporting.md", "tables": ["orders", "refunds", "ads"]},
+    "E": {"name": "素材生产与挑选", "entrypoint": "media", "reference": "references/E-content.md", "tables": ["products"]},
+    "F": {"name": "客服与售后", "entrypoint": "customer_service", "reference": "references/F-customer-service.md", "tables": ["orders", "inventory", "cases", "questions"]},
+    "G": {"name": "选品与价格提醒", "entrypoint": "competitor", "reference": "references/G-selection.md", "tables": ["products", "snapshots", "industry"]}
+  }
+}

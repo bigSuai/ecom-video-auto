@@ -1,0 +1,628 @@
+[
+  {
+    "id": "ceramic-price",
+    "module": "B",
+    "step": 2,
+    "title": "同一只杯子，到底卖哪个价？",
+    "keyword": "查价",
+    "views": [
+      {
+        "table": "normalized",
+        "columns": {
+          "sku": "货号",
+          "name": "商品",
+          "price": "价格",
+          "source_row": "原表行"
+        },
+        "where": {
+          "sku": "000087",
+          "shop_id": "store-1"
+        }
+      },
+      {
+        "table": "issues",
+        "columns": {
+          "source_row": "原表行",
+          "sku": "货号",
+          "message": "检查结果"
+        },
+        "where": {
+          "category": "conflicting_price",
+          "sku": "000087"
+        }
+      }
+    ],
+    "expect": [
+      {
+        "table": "normalized",
+        "row": {
+          "shop_id": "store-1",
+          "source_row": 2,
+          "sku": "000087",
+          "price": "19.90"
+        }
+      },
+      {
+        "table": "normalized",
+        "row": {
+          "shop_id": "store-1",
+          "source_row": 3,
+          "sku": "000087",
+          "price": "20.00"
+        }
+      },
+      {
+        "table": "issues",
+        "row": {
+          "source_row": 2,
+          "category": "conflicting_price"
+        }
+      },
+      {
+        "table": "issues",
+        "row": {
+          "source_row": 3,
+          "category": "conflicting_price"
+        }
+      }
+    ],
+    "template": "ceramic"
+  },
+  {
+    "id": "net-sales",
+    "module": "D",
+    "step": 8,
+    "title": "收款 230 元，净销售额是多少？",
+    "keyword": "复盘",
+    "views": [
+      {
+        "table": "stores",
+        "columns": {
+          "shop_id": "店铺",
+          "paid_amount": "实付",
+          "refund_amount": "退款",
+          "net_sales": "净销售额"
+        },
+        "where": {}
+      },
+      {
+        "table": "overview",
+        "columns": {
+          "paid_amount": "实付合计",
+          "refund_amount": "退款合计",
+          "net_sales": "净销售额",
+          "ad_spend": "广告费"
+        },
+        "where": {}
+      }
+    ],
+    "expect": [
+      {
+        "table": "overview",
+        "row": {
+          "paid_amount": "230",
+          "refund_amount": "20",
+          "net_sales": "210",
+          "ad_spend": "12"
+        }
+      }
+    ],
+    "design": [
+      [
+        "收了多少钱",
+        "账上留多少？"
+      ],
+      [
+        "三家店的收款",
+        "合进一张表"
+      ],
+      [
+        "先看收款",
+        "再扣退款"
+      ],
+      [
+        "实付合计",
+        "退款合计",
+        "净销售额"
+      ],
+      [
+        "¥230",
+        "−¥20",
+        "¥210"
+      ],
+      [
+        "两种金额",
+        "分开看"
+      ],
+      [
+        "净销售额",
+        "¥210"
+      ]
+    ],
+    "voice": [
+      "上架忙了一天，三家店合起来收了二百三十元。今天的净销售额，也是这个数吗？",
+      "一张单子退了二十元。只把收款加起来，账上的数就多出了这一笔。",
+      "让复盘助手跑一遍演示订单。打开报表，每家店的实付、退款和净销售额，都在自己的那一行。",
+      "再把同一币种的店铺放在一起。广告费也在这张表里，要从净销售额里一起扣吗？",
+      "答案看这里。实付减退款，净销售额是二百一十元。广告费单列，留给贡献核算。",
+      "想拿自己的报表试试？关注我，评论区发复盘，领取这套电商助手。"
+    ],
+    "palette": [
+      "#10263d",
+      "#47cbd5",
+      "#ffcf70"
+    ],
+    "image": "s8-reports.jpg"
+  },
+  {
+    "id": "service-reply",
+    "module": "F",
+    "step": 6,
+    "title": "工单处理了，客户收到回复了吗？",
+    "keyword": "售后",
+    "views": [
+      {
+        "table": "after_sales",
+        "columns": {
+          "case_id": "工单",
+          "subject": "咨询",
+          "local_status": "本地处理"
+        },
+        "where": {}
+      },
+      {
+        "table": "after_sales",
+        "columns": {
+          "case_id": "工单",
+          "reply_status": "回复状态",
+          "elapsed_hours": "经过小时",
+          "sla_overdue": "是否超时"
+        },
+        "where": {}
+      }
+    ],
+    "expect": [
+      {
+        "table": "after_sales",
+        "row": {
+          "case_id": "C1",
+          "subject": "物流查询",
+          "local_status": "processed",
+          "reply_status": "unreplied",
+          "sla_overdue": true
+        }
+      },
+      {
+        "table": "after_sales",
+        "row": {
+          "case_id": "C2",
+          "reply_status": "replied"
+        }
+      }
+    ],
+    "design": [
+      [
+        "工单处理了",
+        "回复发了吗？"
+      ],
+      [
+        "物流查询",
+        "追踪发送凭据"
+      ],
+      [
+        "处理标记",
+        "发送凭据"
+      ],
+      [
+        "物流查询",
+        "本地状态",
+        "回复状态"
+      ],
+      [
+        "C1",
+        "已处理",
+        "未回复"
+      ],
+      [
+        "翻到这一条",
+        "回查回复凭据"
+      ],
+      [
+        "物流查询",
+        "仍待回复"
+      ]
+    ],
+    "voice": [
+      "工单上写着已处理，可那位问物流的顾客，真的收到回复了吗？",
+      "有人先在店里作了处理标记，消息却还躺在草稿里。只盯这个标记，最容易漏掉追问。",
+      "把演示工单交给售后助手。看实际清单，物流查询和库存咨询各有一行。",
+      "它把本地处理状态和发送凭据分开核对。如果只有处理标记，这一单算回复了吗？",
+      "物流这单仍列为未回复，还标出了超时。下一位接手的人，知道该先跟哪一单。",
+      "想查自己的售后清单？关注我，评论区发售后，免费领取这套助手。"
+    ],
+    "palette": [
+      "#352338",
+      "#f1a492",
+      "#e7cd77"
+    ],
+    "image": "s6-cs-morning.jpg"
+  },
+  {
+    "id": "ad-window",
+    "module": "C",
+    "step": 5,
+    "title": "同一个广告词，为什么要分开算？",
+    "keyword": "投放",
+    "views": [
+      {
+        "table": "keywords",
+        "columns": {
+          "platform": "平台",
+          "keyword": "关键词",
+          "attribution_window": "归因窗口",
+          "roas": "广告回报"
+        },
+        "where": {}
+      },
+      {
+        "table": "ad_totals",
+        "columns": {
+          "platform": "平台",
+          "attribution_window": "归因窗口",
+          "spend": "投放费用",
+          "roas": "广告回报"
+        },
+        "where": {}
+      }
+    ],
+    "expect": [
+      {
+        "table": "keywords",
+        "row": {
+          "keyword": "陶瓷杯",
+          "attribution_window": "7d_click",
+          "roas": "6"
+        }
+      },
+      {
+        "table": "keywords",
+        "row": {
+          "keyword": "陶瓷杯",
+          "attribution_window": "1d_click",
+          "roas": "4"
+        }
+      }
+    ],
+    "design": [
+      [
+        "同一个词",
+        "回报谁更高？"
+      ],
+      [
+        "陶瓷杯",
+        "跨平台投放"
+      ],
+      [
+        "对照口径",
+        "分开汇总"
+      ],
+      [
+        "平台甲",
+        "平台乙",
+        "归因口径"
+      ],
+      [
+        "7日点击",
+        "1日点击",
+        "分别计算"
+      ],
+      [
+        "分开看",
+        "才读得懂"
+      ],
+      [
+        "广告回报",
+        "6 / 4"
+      ]
+    ],
+    "voice": [
+      "同一个陶瓷杯关键词，在两个平台都投了广告，哪边的回报更好？",
+      "这边写着六，那边写着四。先看看成交算进广告的那段时间，两张表可能不一样。",
+      "让营销助手读入两份演示投放表。报表里，平台、关键词和归因窗口都能对照。",
+      "一个按点击后七天算，一个只看一天。直接把两个数字合起来，会漏掉什么？",
+      "差别就藏在归因窗口。助手按各自口径列出花费和回报，方便你再判断。",
+      "想看自己的广告词？关注我，评论区发投放，免费领取这套助手。"
+    ],
+    "palette": [
+      "#202d40",
+      "#e9bb6b",
+      "#73d5d0"
+    ],
+    "image": "s5-calendar.jpg"
+  },
+  {
+    "id": "comparable-price",
+    "module": "G",
+    "step": 1,
+    "title": "竞品价格，到底能不能比？",
+    "keyword": "比价",
+    "views": [
+      {
+        "table": "products",
+        "columns": {
+          "sku": "货号",
+          "spec": "规格",
+          "price": "本店价格"
+        },
+        "where": {}
+      },
+      {
+        "table": "comparisons",
+        "columns": {
+          "sku": "货号",
+          "own_price": "本店",
+          "price": "竞品",
+          "own_price_gap": "价差",
+          "comparable": "可比"
+        },
+        "where": {}
+      }
+    ],
+    "expect": [
+      {
+        "table": "comparisons",
+        "row": {
+          "own_price": "19.9",
+          "price": "21",
+          "own_price_gap": "-1.1",
+          "comparable": true
+        }
+      }
+    ],
+    "design": [
+      [
+        "竞品挂价",
+        "能直接比吗？"
+      ],
+      [
+        "同款陶瓷杯",
+        "对照快照"
+      ],
+      [
+        "规格与币种",
+        "先对齐"
+      ],
+      [
+        "本店价格",
+        "可比竞品",
+        "本店价差"
+      ],
+      [
+        "¥19.90",
+        "¥21.00",
+        "−¥1.10"
+      ],
+      [
+        "只看可比项",
+        "再看价差"
+      ],
+      [
+        "本店低",
+        "¥1.10"
+      ]
+    ],
+    "voice": [
+      "刷到别家一只陶瓷杯，看起来像同款。对方的标价，能直接拿来比较吗？",
+      "本店十九块九，对面二十一。要是规格或者币种不一样，这点价差就说不清。",
+      "让比价助手读入演示快照。报告把本店价和竞品价摆到同一行，还留下可比判断。",
+      "先对照规格、价格类型和币种，再看货号是否已经匹配。这一款究竟差多少？",
+      "这组快照里，本店低了一块一。保留快照和价差，定价的人可以回去查依据。",
+      "想用自己的比价表试试？关注我，评论区发比价，免费领取这套助手。"
+    ],
+    "palette": [
+      "#16362d",
+      "#f8b273",
+      "#d7dc80"
+    ],
+    "image": "s1-price-check.jpg"
+  },
+  {
+    "id": "listing-queue",
+    "module": "A",
+    "step": 4,
+    "title": "同一货号进两家店，怎样分开准备？",
+    "keyword": "上架",
+    "views": [
+      {
+        "table": "queue",
+        "columns": {
+          "sku": "货号",
+          "shop_id": "店铺",
+          "status": "阶段"
+        },
+        "where": {}
+      },
+      {
+        "table": "queue",
+        "columns": {
+          "sku": "货号",
+          "shop_id": "店铺",
+          "verified_fields": "已核字段",
+          "required_fields": "待核字段总数"
+        },
+        "where": {
+          "sku": "DEMO-CUP-01"
+        }
+      }
+    ],
+    "expect": [
+      {
+        "table": "queue",
+        "row": {
+          "sku": "DEMO-CUP-01",
+          "shop_id": "demo-shop-a",
+          "status": "prepared"
+        }
+      },
+      {
+        "table": "queue",
+        "row": {
+          "sku": "DEMO-CUP-01",
+          "shop_id": "demo-shop-b",
+          "status": "prepared"
+        }
+      }
+    ],
+    "design": [
+      [
+        "同一货号",
+        "要进两家店"
+      ],
+      [
+        "上架准备",
+        "分店建队列"
+      ],
+      [
+        "先分店",
+        "再核字段"
+      ],
+      [
+        "演示商品",
+        "店铺甲",
+        "店铺乙"
+      ],
+      [
+        "陶瓷杯",
+        "待核对",
+        "待核对"
+      ],
+      [
+        "两家店",
+        "各留一条"
+      ],
+      [
+        "本地阶段",
+        "已准备"
+      ]
+    ],
+    "voice": [
+      "同一只杯子准备上到两家店。货号明明一样，哪家店的资料已经准备好了？",
+      "把两家的行混在一张表里，接手的人看见商品名，很容易勾错那一条。",
+      "让上架助手读取演示商品。这里是它真正生成的准备队列，每条都带店铺和货号。",
+      "现在回头查同一货号。两家店各有自己的记录，那这一步能算已经上架吗？",
+      "队列里写的是已准备。后面还要逐字段核对，到提交前由操作人确认。",
+      "要准备自己的上架队列？关注我，评论区发上架，免费领取这套助手。"
+    ],
+    "palette": [
+      "#283449",
+      "#afc8fa",
+      "#ffd589"
+    ],
+    "image": "s4-night-desk.jpg",
+    "interaction": "listing"
+  },
+  {
+    "id": "media-drafts",
+    "module": "E",
+    "step": 3,
+    "title": "一只杯子的素材初稿，去哪儿挑？",
+    "keyword": "素材",
+    "views": [
+      {
+        "table": "media_items",
+        "columns": {
+          "type": "素材类型",
+          "style": "风格",
+          "version": "版本"
+        },
+        "where": {}
+      },
+      {
+        "table": "media_items",
+        "columns": {
+          "type": "素材类型",
+          "status": "状态",
+          "selected": "已选"
+        },
+        "where": {}
+      }
+    ],
+    "expect": [
+      {
+        "table": "media_items",
+        "row": {
+          "type": "main_image",
+          "status": "draft"
+        }
+      },
+      {
+        "table": "media_items",
+        "row": {
+          "type": "video",
+          "status": "draft"
+        }
+      },
+      {
+        "table": "media_items",
+        "row": {
+          "type": "graphic",
+          "status": "draft"
+        }
+      },
+      {
+        "table": "media_items",
+        "row": {
+          "type": "detail",
+          "status": "draft"
+        }
+      }
+    ],
+    "design": [
+      [
+        "一只杯子",
+        "要几种素材？"
+      ],
+      [
+        "同一份资料",
+        "生成模板初稿"
+      ],
+      [
+        "图文与视频",
+        "进同一清单"
+      ],
+      [
+        "商品资料",
+        "图片初稿",
+        "短视频"
+      ],
+      [
+        "陶瓷杯",
+        "待挑选",
+        "待挑选"
+      ],
+      [
+        "先出初稿",
+        "再挑版本"
+      ],
+      [
+        "素材清单",
+        "可供筛选"
+      ]
+    ],
+    "voice": [
+      "一只白色陶瓷杯准备上新，主图、详情和短视频，怎样知道哪份稿子对应哪件商品？",
+      "文件一多，光凭名字挑图就容易混。先让每份初稿都跟同一份商品资料关联起来。",
+      "素材助手用演示资料生成模板稿。打开实际清单，可以看到主图、图文、详情和视频。",
+      "看见文件已经生成，就能直接当成选定版本吗？再看看清单里的状态。",
+      "这些素材仍是初稿。运营可以逐份挑选，把需要重做的留下记录，再导出选中的版本。",
+      "想给商品做一套初稿？关注我，评论区发素材，免费领取这套助手。"
+    ],
+    "palette": [
+      "#402838",
+      "#f1ae92",
+      "#d0dca0"
+    ],
+    "image": "s3-studio.jpg",
+    "interaction": "media"
+  }
+]

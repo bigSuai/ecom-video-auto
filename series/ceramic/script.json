@@ -1,0 +1,263 @@
+{
+  "id": "2026-11-18-s2-b",
+  "type": "product",
+  "step": 2,
+  "angle_index": 1,
+  "skill": {
+    "provided": true,
+    "name": "商品资料整理与检查"
+  },
+  "structure": "question-then-pitfall",
+  "mid_hook": "steps",
+  "theme": "paper",
+  "mood": "warm",
+  "title": "同一只杯子，到底卖哪个价？",
+  "tags": [
+    "#电商自动化",
+    "#商品资料",
+    "#电商运营"
+  ],
+  "cta": {
+    "keyword": "查价",
+    "platform": "douyin"
+  },
+  "images": [
+    {
+      "scene": 0,
+      "file": "s2-sheet-errors.jpg",
+      "prompt": "仓库原配图：运营桌上的商品表和标注"
+    }
+  ],
+  "scenes": [
+    {
+      "type": "photo",
+      "image": "s2-sheet-errors.jpg",
+      "line1": "同一只杯子",
+      "line2": "怎么有两个价？",
+      "vo": "上架前看一眼，这只白色陶瓷杯，到底卖多少钱？",
+      "visual": "product",
+      "eyebrow": "商品资料检查",
+      "head": [
+        "同一只杯子",
+        "怎么有两个价？"
+      ],
+      "sku": "SKU  000087",
+      "product": "白色陶瓷杯",
+      "spec": "350 mL",
+      "prices": [
+        "¥19.90",
+        "¥20.00"
+      ],
+      "unit": "商品表"
+    },
+    {
+      "type": "hookContrast",
+      "line": "同店 · 同款 · 同货号",
+      "left": {
+        "label": "商品表上一行",
+        "value": "¥19.90",
+        "note": "白色陶瓷杯"
+      },
+      "right": {
+        "label": "商品表下一行",
+        "value": "¥20.00",
+        "note": "白色陶瓷杯"
+      },
+      "vo": "上一行写十九块九，下一行写二十。货号都一样，光看商品名，你会选哪一行？",
+      "visual": "tickets",
+      "eyebrow": "商品表 / 原始记录",
+      "head": [
+        "同一货号",
+        "两张价签"
+      ],
+      "rowLabels": [
+        "原表第 2 行",
+        "原表第 3 行"
+      ],
+      "product": "白色陶瓷杯",
+      "spec": "350 mL",
+      "sku": "000087",
+      "prices": [
+        "19.90",
+        "20.00"
+      ],
+      "currency": "¥",
+      "delta": "相差 ¥0.10",
+      "mascot": {
+        "pos": "bottomRight",
+        "S": 270,
+        "x": 740,
+        "f": 1450,
+        "pose": [
+          [
+            0,
+            "phone"
+          ],
+          [
+            2.2,
+            "shock"
+          ],
+          [
+            4.4,
+            "point"
+          ]
+        ],
+        "hop": [
+          2.15,
+          4.4
+        ]
+      }
+    },
+    {
+      "type": "footage",
+      "slot": "mid",
+      "line": "检查报告里找到了什么？",
+      "vo": "把这张商品表交给资料检查助手。打开问题清单，两条记录都在。",
+      "visual": "evidence",
+      "eyebrow": "资料检查 / 本地实录",
+      "head": [
+        "打开",
+        "问题清单"
+      ],
+      "win": "商品资料检查报告",
+      "rowLabels": [
+        "原表第 2 行",
+        "原表第 3 行"
+      ],
+      "status": "同店同货号 · 价格冲突",
+      "pending": "演示画面",
+      "file": "检查报告",
+      "sku": "000087"
+    },
+    {
+      "type": "steps",
+      "title": "该留下哪个价格？",
+      "items": [
+        "把价格写法统一",
+        "对照同店的货号",
+        "怎么处理冲突？"
+      ],
+      "hide_last": true,
+      "mid_hook": true,
+      "vo": "它先把价格的写法理顺，再对照同一家店的货号。那价钱对不上怎么办？",
+      "visual": "normalize",
+      "eyebrow": "资料检查 / 格式统一",
+      "head": [
+        "写法统一后",
+        "再比价格"
+      ],
+      "labels": [
+        "原始写法",
+        "标准价格"
+      ],
+      "raw": [
+        "￥１９．９０",
+        "20"
+      ],
+      "values": [
+        "19.90",
+        "20.00"
+      ],
+      "sku": "000087",
+      "store": "同一家店",
+      "match": "同一货号",
+      "problem": "价格对不上",
+      "rowLabels": [
+        "原表第 2 行",
+        "原表第 3 行"
+      ]
+    },
+    {
+      "type": "reveal",
+      "num": "≠",
+      "title": "两行都保留",
+      "line": "标出冲突，回查原单",
+      "payoff": true,
+      "vo": "两行都留着，标出冲突。你只要回查这只杯子的原单，就知道该改哪一行。",
+      "visual": "archive",
+      "eyebrow": "资料检查 / 人工复核",
+      "head": [
+        "两行",
+        "都保留"
+      ],
+      "rows": [
+        "原表第 2 行",
+        "原表第 3 行"
+      ],
+      "prices": [
+        "¥19.90",
+        "¥20.00"
+      ],
+      "sku": "000087",
+      "status": "价格冲突",
+      "folder": "待核对",
+      "instruction": "回查原单",
+      "mascot": {
+        "pos": "bottomRight",
+        "x": 746,
+        "f": 1452,
+        "S": 272,
+        "pose": [
+          [
+            0,
+            "clip"
+          ],
+          [
+            2.6,
+            "point"
+          ],
+          [
+            4.5,
+            "cheer"
+          ]
+        ],
+        "hop": [
+          2.65,
+          4.45
+        ]
+      }
+    },
+    {
+      "type": "cta",
+      "kicker": "商品资料检查助手",
+      "title": "免费领取",
+      "foot": "关注，看更多上架技巧",
+      "keyword": "查价",
+      "vo": "想用自己的商品表试试？关注我，评论区发查价，免费领取这份工具。",
+      "visual": "claim",
+      "eyebrow": "商品资料检查助手",
+      "head": [
+        "拿你的商品表",
+        "查一遍。"
+      ],
+      "follow": "关注",
+      "followed": "已关注",
+      "slip": "免费领取",
+      "sku": "SKU  000087",
+      "mascot": {
+        "pos": "cta",
+        "S": 350,
+        "x": 675,
+        "f": 1445,
+        "pose": [
+          [
+            0,
+            "clip"
+          ],
+          [
+            1.5,
+            "point"
+          ],
+          [
+            3.7,
+            "wave"
+          ]
+        ],
+        "hop": [
+          1.5,
+          3.75
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,94 @@
+{
+  "data_kind": "synthetic",
+  "start_date": "2026-11-16",
+  "end_date": "2026-11-16",
+  "orders": [
+    {
+      "platform": "demo-a",
+      "shop_id": "store-1",
+      "order_id": "SAME-ORDER-1",
+      "line_id": "1",
+      "date": "2026-11-16",
+      "sku": "SAME-SKU",
+      "currency": "CNY",
+      "quantity": "1",
+      "paid_amount": "100",
+      "status": "paid",
+      "unit_cost": "40",
+      "shipping_cost": "2",
+      "packing_cost": "1",
+      "platform_fee": "1"
+    },
+    {
+      "platform": "demo-a",
+      "shop_id": "store-2",
+      "order_id": "SAME-ORDER-1",
+      "line_id": "1",
+      "date": "2026-11-16",
+      "sku": "SAME-SKU",
+      "currency": "CNY",
+      "quantity": "1",
+      "paid_amount": "80",
+      "status": "paid",
+      "unit_cost": "30",
+      "shipping_cost": "2",
+      "packing_cost": "1",
+      "platform_fee": "1"
+    },
+    {
+      "platform": "demo-b",
+      "shop_id": "store-3",
+      "order_id": "SAME-ORDER-1",
+      "line_id": "1",
+      "date": "2026-11-16",
+      "sku": "SAME-SKU",
+      "currency": "CNY",
+      "quantity": "1",
+      "paid_amount": "50",
+      "status": "paid",
+      "unit_cost": "20",
+      "shipping_cost": "2",
+      "packing_cost": "1",
+      "platform_fee": "1"
+    }
+  ],
+  "refunds": [
+    {
+      "platform": "demo-a",
+      "shop_id": "store-1",
+      "refund_id": "REF-1",
+      "order_id": "SAME-ORDER-1",
+      "line_id": "1",
+      "date": "2026-11-16",
+      "currency": "CNY",
+      "amount": "20",
+      "recovered_cost": "4"
+    }
+  ],
+  "ads": [
+    {
+      "platform": "demo-a",
+      "shop_id": "store-1",
+      "ad_id": "DAILY",
+      "date": "2026-11-16",
+      "currency": "CNY",
+      "spend": "5"
+    },
+    {
+      "platform": "demo-a",
+      "shop_id": "store-2",
+      "ad_id": "DAILY",
+      "date": "2026-11-16",
+      "currency": "CNY",
+      "spend": "4"
+    },
+    {
+      "platform": "demo-b",
+      "shop_id": "store-3",
+      "ad_id": "DAILY",
+      "date": "2026-11-16",
+      "currency": "CNY",
+      "spend": "3"
+    }
+  ]
+}

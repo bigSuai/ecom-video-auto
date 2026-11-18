@@ -1,0 +1,57 @@
+{
+  "data_kind": "synthetic",
+  "now": "2026-11-17T12:00:00Z",
+  "drop_threshold_percent": "5",
+  "products": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000087",
+      "name": "演示陶瓷杯",
+      "spec": "白色350ml",
+      "price": "19.90",
+      "stock": "8",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      },
+      "price_type": "regular"
+    }
+  ],
+  "snapshots": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000087",
+      "competitor_id": "R1",
+      "product_name": "虚构竞品杯",
+      "currency": "CNY",
+      "price": "21",
+      "spec": "白色350ml",
+      "price_type": "regular",
+      "available": true,
+      "match_confirmed": true,
+      "observed_at": "2026-11-17T11:59:00Z",
+      "source_url": "local-demo:competitor"
+    }
+  ],
+  "industry": [
+    {
+      "category": "杯具",
+      "product": "虚构杯A",
+      "currency": "CNY",
+      "units": "20",
+      "revenue": "398",
+      "source_url": "local-demo:industry"
+    },
+    {
+      "category": "杯具",
+      "product": "虚构杯B",
+      "currency": "CNY",
+      "units": "10",
+      "revenue": "250",
+      "source_url": "local-demo:industry"
+    }
+  ]
+}

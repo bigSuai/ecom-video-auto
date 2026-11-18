@@ -1,0 +1,38 @@
+{
+  "data_kind": "synthetic",
+  "products": [
+    {
+      "platform": "demo",
+      "shop_id": "demo-shop-a",
+      "sku": "DEMO-CUP-01",
+      "title": "演示陶瓷水杯",
+      "category": "家居/水杯",
+      "spec": "蓝色 350ml",
+      "price": "19.90",
+      "stock": 8,
+      "images": []
+    },
+    {
+      "platform": "demo",
+      "shop_id": "demo-shop-a",
+      "sku": "DEMO-BAG-02",
+      "title": "演示棉布袋",
+      "category": "箱包/购物袋",
+      "spec": "米白色 30cm",
+      "price": "12.50",
+      "stock": 12,
+      "images": []
+    },
+    {
+      "platform": "demo",
+      "shop_id": "demo-shop-b",
+      "sku": "DEMO-CUP-01",
+      "title": "演示陶瓷水杯B店",
+      "category": "家居/水杯",
+      "spec": "绿色 350ml",
+      "price": "21.00",
+      "stock": 5,
+      "images": []
+    }
+  ]
+}

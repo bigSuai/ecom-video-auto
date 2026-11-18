@@ -1,0 +1,22 @@
+{
+  "data_kind": "synthetic",
+  "mode": "template",
+  "style": "minimal",
+  "duration": 2,
+  "products": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000087",
+      "name": "演示陶瓷杯",
+      "spec": "白色350ml",
+      "price": "19.90",
+      "stock": "8",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      }
+    }
+  ]
+}

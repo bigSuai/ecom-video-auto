@@ -9,6 +9,18 @@ sys.path.insert(0, str(ROOT / "tools")); sys.path.insert(0, str(ROOT / "pipeline
 from audio import SR, write_wav
 import web_tts, tts
 
+REFERENCE_TEXT = "这是网页版配音测试使用的虚构参考文本。"
+
+
+@pytest.fixture
+def voice_reference(tmp_path, monkeypatch):
+    monkeypatch.setattr(web_tts, "ROOT", tmp_path)
+    assets = tmp_path / "assets" / "voice"
+    assets.mkdir(parents=True)
+    samples = np.arange(SR) / SR
+    write_wav(assets / "ref.wav", np.asarray(0.3 * np.sin(2 * np.pi * 440 * samples), dtype=np.float32))
+    (assets / "ref.txt").write_text(REFERENCE_TEXT, encoding="utf-8")
+
 
 def _server(tmp, fail_first=0):
     calls = {"post": [], "n": 0}
@@ -38,20 +50,20 @@ def _out(tmp):
     return out
 
 
-def test_web_voice_end_to_end(tmp_path):
+def test_web_voice_end_to_end(tmp_path, voice_reference):
     srv, calls = _server(tmp_path)
     out = _out(tmp_path); vox = tmp_path / "VoxCPM"
     v = web_tts.run(out, f"http://127.0.0.1:{srv.server_port}", vox)
     assert set(v) == {"s01", "s02"} and all(d > 1 for d in v.values())
     assert (vox / "output" / "gradio" / "ecomvoice_ref" / "ref.wav").is_file()
     d = calls["post"][0]["data"]
-    assert d[2]["path"].endswith("ref.wav") and d[3] is True and d[4] == (ROOT / "assets/voice/ref.txt").read_text(encoding="utf-8").strip()
+    assert d[2]["path"].endswith("ref.wav") and d[3] is True and d[4] == REFERENCE_TEXT
     assert d[5:] == [2, False, False, 10, 42]
     assert json.loads((out / "voice" / "texts.json").read_text(encoding="utf-8"))["s02"] == "关注我，上线后领取。"
     srv.shutdown()
 
 
-def test_retry_only_failed_segment(tmp_path):
+def test_retry_only_failed_segment(tmp_path, voice_reference):
     srv, calls = _server(tmp_path, fail_first=1)
     out = _out(tmp_path)
     web_tts.run(out, f"http://127.0.0.1:{srv.server_port}", tmp_path / "V")
@@ -59,7 +71,7 @@ def test_retry_only_failed_segment(tmp_path):
     srv.shutdown()
 
 
-def test_only_keeps_other_segments(tmp_path):
+def test_only_keeps_other_segments(tmp_path, voice_reference):
     srv, calls = _server(tmp_path)
     out = _out(tmp_path); url = f"http://127.0.0.1:{srv.server_port}"
     web_tts.run(out, url, tmp_path / "V")
@@ -68,8 +80,14 @@ def test_only_keeps_other_segments(tmp_path):
     srv.shutdown()
 
 
-def test_server_down_fails_cleanly(tmp_path):
+def test_server_down_fails_cleanly(tmp_path, voice_reference):
     out = _out(tmp_path)
     with pytest.raises(tts.TTSFailed):
         web_tts.run(out, "http://127.0.0.1:9", tmp_path / "V")
     assert not (out / "voice" / "voice.json").exists()
+
+
+def test_clean_install_explains_missing_reference(tmp_path, monkeypatch):
+    monkeypatch.setattr(web_tts, "ROOT", tmp_path)
+    with pytest.raises(tts.TTSFailed, match=r"ref\.wav 和 ref\.txt"):
+        web_tts.run(_out(tmp_path), "http://127.0.0.1:9", tmp_path / "V")

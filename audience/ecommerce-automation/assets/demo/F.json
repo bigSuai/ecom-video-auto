@@ -1,0 +1,82 @@
+{
+  "data_kind": "synthetic",
+  "now": "2026-11-17T12:00:00Z",
+  "orders": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "order_id": "0001",
+      "line_id": "1",
+      "sku": "000087",
+      "status": "paid",
+      "quantity": "1",
+      "updated_at": "2026-11-17T11:00:00Z"
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-2",
+      "order_id": "0001",
+      "line_id": "1",
+      "sku": "000087",
+      "status": "paid",
+      "quantity": "1",
+      "updated_at": "2026-11-17T11:00:00Z"
+    }
+  ],
+  "inventory": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000087",
+      "stock": "8",
+      "updated_at": "2026-11-17T11:00:00Z"
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-2",
+      "sku": "000087",
+      "stock": "2",
+      "updated_at": "2026-11-17T11:00:00Z"
+    }
+  ],
+  "cases": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "case_id": "C1",
+      "order_id": "0001",
+      "sku": "000087",
+      "customer_alias": "虚构买家A",
+      "subject": "物流查询",
+      "received_at": "2026-11-15T10:00:00Z",
+      "local_status": "processed",
+      "draft": "请核对物流后再发送"
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-2",
+      "case_id": "C2",
+      "order_id": "0001",
+      "sku": "000087",
+      "customer_alias": "虚构买家B",
+      "subject": "库存咨询",
+      "received_at": "2026-11-17T10:00:00Z",
+      "replied_at": "2026-11-17T11:00:00Z",
+      "sent_evidence": "虚构ERP发送记录MSG-DEMO-2"
+    }
+  ],
+  "questions": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "question": "多久发货？",
+      "answer": "演示政策为48小时内发货",
+      "source": "虚构演示政策v1"
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "question": " 多久发货 ? "
+    }
+  ]
+}

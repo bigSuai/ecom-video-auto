@@ -1,0 +1,2 @@
+# Preserve the exact bytes used to build the viewer ZIP and hash its demo inputs.
+audience/ecommerce-automation/** -text whitespace=trailing-space,space-before-tab,cr-at-eol

@@ -9,7 +9,9 @@ description: 自动制作电商自动化 skills 的推广短视频（选题、�
 
 脚本负责配音、配乐、渲染、合成和各项检查；你负责：选题、问用户要 skill、写剧本、**写这条视频的动效画面代码**（第 7 节）、看检查结果和审片。所有命令都由你在用户电脑上、从工程根目录直接运行，结果自己读，不要让用户去点文件。
 
-**画面质量优先。** 画面要按 Opus / Fable 的前端水准做：满屏、有层次、一直在动，不能像 PPT。跨 agent 通用是次要的，两者冲突时为画面让步。其他模型只能用兜底场景库（第 15 节），交付时必须注明"画面为兜底版"。
+**正式画面以陶瓷杯 v2 为基准。** Codex、Claude 等制作端都应为题目设计专属动效，给每个内容镜头绑定 `visual`。参考 `series/ceramic/` 的产品多视角、跟随配音的价签、可读的实录窗口、结果揭晓和品牌收尾。按内容安排运动与停留，逐镜审片。
+
+**推广观众领取包时优先走批量入口。** 从工程根目录运行 `python pipeline/series_batch.py run --output out/系列 --count 1`；批量时调整数量或指定 `--topics B,D,F`。选题、执行同版本领取包、录屏、合成及领取索引由程序串起。可录选题、一次准备和扩展方法见 [批量出片与领取包](docs/批量出片与领取包.md)。
 
 **用法**
 - 做新视频：第 1–10 节，先看下面的清单。
@@ -56,7 +58,7 @@ python -m playwright install chromium         # 录网页工具、爆款采集�
 
 另需 ffmpeg / ffprobe 在 PATH 里（Windows：`winget install Gyan.FFmpeg`）。
 
-配音默认用本机开着的 VoxCPM 网页版（第 8 节），需要 NVIDIA 显卡（约 8 GB 显存）。没装 VoxCPM 时运行 `python tools/setup_tts.py`；退出码 3 表示硬件不够，如实告诉用户，不要换别的声音。默认音色已经在 `assets/voice/`，不要再生成或替换它（第 16 节）。
+配音默认用本机开着的 VoxCPM 网页版（第 8 节），需要 NVIDIA 显卡（约 8 GB 显存）。没装 VoxCPM 时运行 `python tools/setup_tts.py`；退出码 3 表示硬件不够，如实告诉用户，不要换别的声音。在 `assets/voice/` 使用当前发布方自行配置的参考音色（第 16 节）。初次使用请按 README 设置参考音。
 
 # 一、做新视频
 
@@ -162,7 +164,7 @@ python tools/regen_images.py        # 剧本里登记了、但 assets/images/ �
 
 ## 7. 画面：每条视频自己写动效代码（画面档）
 
-**先看你是什么模型。** 画面档要求 Opus / Fable 这一级的前端能力：每条视频由你写一份专属的动效代码。其他模型不写 `visual.js`，改用兜底场景库（第 15 节）。**不要为了让别的模型也能做而降低画面标准。**
+**每集围绕本次操作设计画面。** Codex 和其他制作端均写或复用与题目匹配的专属 `visual.js`。素材、道具和运动应解释这一步操作的因果。
 
 1. **先读 `docs/画面档写法.md`**（分镜、构图、运动、套件、骨架、迭代方法、踩过的坑），再从里面的范例表挑一条题材最近的 `out/<编号>/visual.js` 读一遍。先给每个场景写一句分镜（画面在演什么变化），再写代码。
 2. 剧本里每个场景已经有 `visual` 和上屏文字字段（第 4 节）。**画面代码里不要硬写上屏文字。**
@@ -219,7 +221,7 @@ python pipeline/make.py out/<编号>/script.json --reuse-voice --footage hook=�
 python pipeline/scene_check.py out/<编号> <场景序号>
 ```
 
-只渲染这几个场景复查（几十秒），全过了再整片出。兜底版不拦，但 `publish.json` 里 `visual_tier` 是"兜底版"。`--allow-still` 只用于调试，不能交付。
+先抽帧复查有问题的场景，通过后再整片渲染。正式片必须通过运动检查；`--allow-still` 只用于调试。
 
 失败时会说明原因（例如时长超出、缺配图、配音失败），按提示处理后重跑。
 
@@ -298,13 +300,13 @@ python research/digest.py top data/research/<日期>-douyin.json    # 看排名�
 
 企鹅：`"mascot": {"pos": "bottomRight", "pose": "point", "say": [[0.6, "交给我！"]]}`。`pos` 可选 `topRight` `bottomRight` `big` `cta`；`pose` 可选 `base` `talk` `blink` `phone` `point` `cheer` `shock` `clip` `wave`；画面档里还可以用 `S` `x` `f` 自定位置、`move` 走位。
 
-## 15. 兜底场景库（非 Opus / Fable 模型用）
+## 15. 内置场景库预览
 
 不写 `visual.js`、剧本场景不写 `visual` 时，引擎按 `type` 用内置场景库（`engine/scenes.js`）画，并给每个场景加镜头推移防止整段不动。
 
 - 剧本照第 4 节写，按第 14 节的类型填字段（`hookContrast` 的左右两栏、`counter` 的数字、`bars` 的数据条、`steps` 的步骤等，字段见 `tests/scene_fixtures.mjs`）。
-- 出片照第 9 节；兜底版运动检查不过也会出片，`publish.json` 的 `visual_tier` 为"兜底版"。
-- 交付时必须告诉用户"画面为兜底版"，建议之后用 Opus / Fable 按第 11 节重做。
+- 仅在明确要预览内置场景时给 `make.py` 传 `--fallback-preview`。这种预览在 `publish.json` 标记为“兜底版”。
+- 预览文件应注明“画面为兜底版”；正式出片按第 7 节补齐专属画面后重跑。
 
 ## 16. 配乐与声音
 

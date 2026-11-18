@@ -1,0 +1,89 @@
+{
+  "data_kind": "synthetic",
+  "products": [
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000087",
+      "name": " 演示陶瓷杯 ",
+      "spec": "白色350ml",
+      "price": "￥１９．９０",
+      "stock": "８",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      }
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000087",
+      "name": "演示陶瓷杯",
+      "spec": "白色350ml",
+      "price": "20",
+      "stock": "8",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      }
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000088",
+      "name": "演示陶瓷杯",
+      "spec": "",
+      "price": "待确认",
+      "stock": "-2",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      }
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000089",
+      "name": "",
+      "spec": "白色350ml",
+      "price": "12.345",
+      "stock": "1.5",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      }
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-2",
+      "sku": "000087",
+      "name": "演示陶瓷杯",
+      "spec": "白色350ml",
+      "price": "19.90",
+      "stock": "8",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      }
+    },
+    {
+      "platform": "demo",
+      "shop_id": "store-1",
+      "sku": "000090",
+      "name": "演示陶瓷杯",
+      "spec": "白色350ml",
+      "price": "19.90",
+      "stock": "0",
+      "currency": "CNY",
+      "rights": {
+        "status": "original",
+        "evidence": "虚构商品资料和程序模板，未使用第三方图片或音乐"
+      }
+    }
+  ]
+}

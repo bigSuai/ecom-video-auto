@@ -40,10 +40,10 @@ def _parse_footage(args):
 def step_id(script: dict) -> str:
     return f"s{script.get('step')}"
 
-def footage_slots(script: dict, wanted, out: Path) -> dict:
+def footage_slots(script: dict, wanted, out: Path, evidence_pack=None) -> dict:
     """wanted 是 _parse_footage 的结果：'auto' 时用这一步的素材包（没有或待确认就占位）。"""
     if wanted == "auto":
-        p = load_pack(step_id(script)) if script.get("step") is not None else None
+        p = evidence_pack if evidence_pack is not None else (load_pack(step_id(script)) if script.get("step") is not None else None)
         wanted = {}
         if p:
             for slot, h in (p.get("highlights") or {}).items():
@@ -70,16 +70,17 @@ def _ffmpeg(args, cwd, what):
         raise Stop(f"{what}失败：{r.stderr.strip()[-300:]}")
 
 def run(script_path: Path, footage_args, backend_name: str, reuse_voice: bool = False, music_mode: str = "compose", check_history=None,
-        allow_still: bool = False) -> Path:
+        allow_still: bool = False, fallback_preview: bool = False, evidence_pack=None, history_file=None) -> Path:
     """check_history：剧本检查时拿来比对“近 N 条不重复”的历史；重出旧片时传它原来位置之前的历史。"""
     script = json.loads(script_path.read_text(encoding="utf-8"))
     vid = script["id"]; out = script_path.parent
-    history_path = ROOT / "data" / "history.json"; history = load_history(history_path)
+    history_path = Path(history_file) if history_file is not None else ROOT / "data" / "history.json"; history = load_history(history_path)
     final = out / f"{vid}.mp4"
-    if final.exists(): final.unlink()
+    if not fallback_preview and not all(sc.get("visual") for sc in script["scenes"]):
+        raise Stop("正式成片需要每个内容镜头使用专属 visual.js。模板预览请显式传 --fallback-preview。")
 
     print("1/9 剧本检查")
-    p = load_pack(step_id(script)) if script.get("step") is not None else None
+    p = evidence_pack if evidence_pack is not None else (load_pack(step_id(script)) if script.get("step") is not None else None)
     probs = check(script, history if check_history is None else check_history, measured=(p or {}).get("measured"))
     import dedupe
     hist_for_dup = history if check_history is None else check_history
@@ -92,7 +93,7 @@ def run(script_path: Path, footage_args, backend_name: str, reuse_voice: bool = 
             raise Stop(f"第 {i+1} 个场景的配图不存在：{img}（先用 tools/gen_image.py 生成）")
 
     print("2/9 实录槽位")
-    foot = footage_slots(script, _parse_footage(footage_args), out)
+    foot = footage_slots(script, _parse_footage(footage_args), out, evidence_pack)
     pending = any(not f.get("n") for f in foot.values())
 
     print("3/9 配音")
@@ -122,7 +123,7 @@ def run(script_path: Path, footage_args, backend_name: str, reuse_voice: bool = 
     mc = motion_check.check(out / "video.mp4")
     (out / "motion.json").write_text(json.dumps(mc, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"   画面运动：静止 {mc['still_ratio']:.1%}，冻结 {len(mc['still_runs'])} 段，缺新动作 {len(mc['event_gaps'])} 段")
-    tier = "自写画面" if any(sc.get("visual") for sc in script["scenes"]) else "兜底版"
+    tier = "自写画面" if all(sc.get("visual") for sc in script["scenes"]) else "兜底版"
     if tier == "兜底版" and not mc["ok"]:
         print("   ! 兜底场景库做不到全程运动，这条标为\"画面为兜底版\"（交付时要告诉用户）")
     elif not mc["ok"] and not allow_still:
@@ -182,7 +183,7 @@ def run(script_path: Path, footage_args, backend_name: str, reuse_voice: bool = 
                     "theme": script.get("theme"), "track": track["id"], "has_footage": not pending})
     history_path.parent.mkdir(parents=True, exist_ok=True)
     history_path.write_text(json.dumps(history, ensure_ascii=False, indent=1), encoding="utf-8")
-    if script.get("type") == "hot": mark_hot_used((script.get("hot") or {}).get("source_url"))
+    if history_file is None and script.get("type") == "hot": mark_hot_used((script.get("hot") or {}).get("source_url"))
     return final
 
 def mark_hot_used(url, path: Path = ROOT / "data" / "hot.json") -> None:
@@ -201,9 +202,10 @@ def main(argv=None) -> int:
     ap.add_argument("--music", default="compose", choices=["compose", "library"], help="compose：按剧本段落原创编曲；library：从曲库选曲")
     ap.add_argument("--reuse-voice", action="store_true", help="复用 out/<id>/voice/ 里已合成的配音")
     ap.add_argument("--allow-still", action="store_true", help="画面运动检查不过也出片（只用于调试，交付的片子不能用）")
+    ap.add_argument("--fallback-preview", action="store_true", help="显式使用内置场景作预览")
     a = ap.parse_args(argv)
     try:
-        final = run(Path(a.script).resolve(), a.footage, a.tts_backend, a.reuse_voice, a.music, allow_still=a.allow_still)
+        final = run(Path(a.script).resolve(), a.footage, a.tts_backend, a.reuse_voice, a.music, allow_still=a.allow_still, fallback_preview=a.fallback_preview)
     except Stop as e:
         print("✗", e); return 1
     print("✓ 成片：", final); return 0

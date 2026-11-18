@@ -77,7 +77,12 @@ def run(out_dir: Path, url: str = DEFAULT_URL, voxcpm: Path = Path(DEFAULT_VOXCP
     from import_voice import squeeze
     out_dir = Path(out_dir)
     script = json.loads((out_dir / "script.json").read_text(encoding="utf-8"))
-    ref = ROOT / "assets" / "voice" / "ref.wav"; ref_txt = (ROOT / "assets" / "voice" / "ref.txt").read_text(encoding="utf-8").strip()
+    voice_assets = ROOT / "assets" / "voice"
+    ref = voice_assets / "ref.wav"
+    transcript = voice_assets / "ref.txt"
+    if not ref.is_file() or not transcript.is_file():
+        raise tts.TTSFailed("请在 assets/voice/ 配置 ref.wav 和 ref.txt，或运行 python tools/design_voice.py --auto。")
+    ref_txt = transcript.read_text(encoding="utf-8").strip()
     segs = segments(script)
     want = [s for s in segs if not only or s[0] in only]
     if backend is None:
