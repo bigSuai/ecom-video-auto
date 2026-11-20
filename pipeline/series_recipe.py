@@ -55,7 +55,21 @@ def prepare(recipe, dest):
                       title=recipe["title"],tags=["#电商自动化","#电商运营","#店铺运营"],
                       images=[dict(scene=0,file=recipe["image"])],cta=dict(keyword=recipe["keyword"],platform="douyin"),scenes=scenes)
     script["id"] = recipe["id"]
-    shutil.copyfile(visual,dest/"visual.js")
+    hook = script["scenes"][0]
+    hook.update(slot="hook", visual="live_hook")
+    scale = {"A":"件商品等着上架？", "B":"条商品资料怎么查？"}
+    if recipe["module"] in scale:
+        hook["scale_example"] = scale[recipe["module"]]
+    middle = next(scene for scene in script["scenes"] if scene.get("slot") == "mid")
+    if recipe.get("interaction") == "listing":
+        middle.update(head=["网页连填","字段读回"], report_title="演示商家后台 · 连续录制",
+                      report_note="读回核验 · 停在提交确认前")
+    elif recipe.get("interaction") == "media":
+        middle.update(head=["选中主图","导出文件"], report_title="本机素材工具 · 实际导出",
+                      report_note="当次生成 · 当次导出")
+    (dest/"visual.js").write_text(
+        visual.read_text(encoding="utf-8") + "\n" + (SERIES/"hook.js").read_text(encoding="utf-8"),
+        encoding="utf-8")
     write(dest/"script.json",script)
     return script
 

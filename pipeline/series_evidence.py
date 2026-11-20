@@ -40,7 +40,6 @@ PROJECT = """arg => {
  if(!visible)throw Error('report filter selected no rows');window.scrollTo(0,0);
 }"""
 STYLE = """*{box-sizing:border-box}body{margin:0;padding:25px 32px;background:#fbf7ec;color:#172e28;font:24px "Microsoft YaHei",sans-serif}section{margin:0;overflow:visible}h2{font-size:33px;color:#153c30;margin:0 0 15px}table{width:100%;border-collapse:collapse;background:#fff}td,th{padding:12px;border:1px solid #cbd8c9;font-size:25px;overflow-wrap:anywhere}th{background:#e0eada;font-size:23px}"""
-LENGTH = 8
 
 
 def execute(skill, recipe, dest, sample):
@@ -73,7 +72,9 @@ def execute(skill, recipe, dest, sample):
 def mark_view(page, color):
     # A small recording indicator anchors trims to encoded frames, including on busy machines.
     page.evaluate("""color => {
+        document.querySelector('#capture-cue')?.remove();
         const dot = document.createElement('div');
+        dot.id='capture-cue';
         dot.style.cssText='position:fixed;right:4px;top:4px;width:14px;height:14px;z-index:2147483647;border-radius:3px;background:'+color;
         document.documentElement.appendChild(dot);
     }""", color)
@@ -87,8 +88,10 @@ def recorded_starts(raw, lengths):
     for i in range(0, len(pixels), 3):
         rgb = pixels[i:i+3]
         channel = max(range(3), key=rgb.__getitem__)
-        if len(found) == 4 and rgb[0] < 90 and min(rgb[1:]) > 160:
+        if len(found) >= 4 and rgb[0] < 90 and min(rgb[1:]) > 160:
             found[3].append(i // 3 / 25)
+        elif len(found) >= 5 and rgb[1] < 90 and min(rgb[0], rgb[2]) > 160:
+            found[4].append(i // 3 / 25)
         elif rgb[channel] > 170 and all(rgb[j] < 90 for j in range(3) if j != channel):
             found[channel].append(i // 3 / 25)
     starts = []
@@ -97,6 +100,39 @@ def recorded_starts(raw, lengths):
             raise ValueError("原始录像缺少持续可读的启动画面或报告视图")
         starts.append(times[0] + .04)
     return starts
+
+
+def edit_capture(raw, clip, action):
+    """Cut two separate windows from the same continuous, real run."""
+    minimums = [1.7, 2.6, 2.8, .7, 1.6] if action else [1.7, 2.6, 2.8]
+    starts = recorded_starts(raw, minimums)
+    if action:
+        # Preserve an uninterrupted section of the real browser interaction for the middle.
+        hook_parts = [(3, 1.28, "开始实际操作"), (4, 1.6, "实际核验或导出结果")]
+        mid_parts = [(3, 3.52, action["action"]), (4, 1.44, "本次操作结果")]
+    else:
+        hook_parts = [(0, 1.68, "运行领取包"), (2, 1.56, "直接看问题或结果")]
+        mid_parts = [(1, 2.52, "读取本次处理结果"), (2, 2.8, "核对输出证据")]
+    filters, steps, highlights = [], [], {}
+    cursor = 0
+    for slot, parts in (("hook", hook_parts), ("mid", mid_parts)):
+        begin = cursor
+        for index, duration, label in parts:
+            source = starts[index]
+            filters.append(f"[0:v]fps=25,trim=start={source:.3f}:duration={duration},setpts=PTS-STARTPTS,fps=30[v{len(filters)}]")
+            steps.append({"name": label, "slot": slot, "start": round(cursor, 3), "end": round(cursor + duration, 3),
+                          "source_start": round(source, 3), "source_duration": duration})
+            cursor += duration
+        highlights[slot] = {"start": round(begin, 3), "dur": round(cursor-begin, 3), "speed": 1}
+    inputs = "".join(f"[v{i}]" for i in range(len(filters)))
+    filters.append(f"{inputs}concat=n={len(filters)}:v=1:a=0[out]")
+    subprocess.run(["ffmpeg", "-nostdin", "-v", "error", "-i", str(raw), "-filter_complex", ";".join(filters),
+                    "-map", "[out]", "-an", "-c:v", "libx264", "-preset", "veryfast", "-pix_fmt", "yuv420p",
+                    "-movflags", "+faststart", "-n", str(clip)], check=True)
+    from footage import probe_seconds
+    if probe_seconds(clip) + .05 < cursor:
+        raise ValueError("录像实际时长不足")
+    return highlights, steps, starts
 
 
 def run_and_record(skill, recipe, dest, release, browser):
@@ -113,7 +149,8 @@ def run_and_record(skill, recipe, dest, release, browser):
             raise ValueError("本次录像已执行")
         result = execute(skill, recipe, dest, sample)
         observed.append(result)
-        return "运行完成 · 已处理 " + str(result[0]["summary"]["processed_rows"]) + " 行"
+        run = result[0]
+        return f'运行完成 · {run["summary"]["processed_rows"]} 行 · 模块用时 {run["processing_seconds"]:.3f} 秒'
     try:
         page = ctx.new_page()
         video = page.video
@@ -121,7 +158,7 @@ def run_and_record(skill, recipe, dest, release, browser):
         page.set_content('<meta charset=utf-8><style>body{background:#f7f4e8;color:#173c32;margin:46px;font:28px Microsoft YaHei,sans-serif}h1{font-size:45px}button{font:inherit;background:#17563f;color:white;border:0;border-radius:8px;padding:12px 22px}code{font-size:20px}</style>'
             + '<small>领取包实录 · 虚构演示输入</small><h1>' + html.escape(recipe["title"]) + '</h1>'
             + '<code>ecommerce.py run --module ' + html.escape(module) + '</code><p><button>运行领取包</button></p><strong id="status"></strong>'
-            + '<script>document.querySelector("button").onclick=async(e)=>{e.target.disabled=true; document.querySelector("#status").textContent=await runViewerSkill()}</script>')
+            + '<script>document.querySelector("button").onclick=async(e)=>{e.target.disabled=true;e.target.textContent="正在运行…";document.querySelector("#status").textContent=await runViewerSkill();e.target.textContent="运行完成 ✓";}</script>')
         mark_view(page, "#f02020")
         page.wait_for_timeout(800)
         page.get_by_role("button").click()
@@ -154,28 +191,12 @@ def run_and_record(skill, recipe, dest, release, browser):
     raw=dest/"execution.webm"
     Path(video.path()).replace(raw)
     clip = dest / "recording.mp4"
-    # Cut waiting time only in the highlight. Original real-time recording remains next to the pack.
-    lengths = [1.4, 2.1, 2.1, 2.4] if action else [1.4, 3.2, 3.4]
-    starts = recorded_starts(raw, lengths)
-    filters=[f"[0:v]trim=start={t:.3f}:duration={d},setpts=PTS-STARTPTS,fps=30[v{i}]"
-             for i,(t,d) in enumerate(zip(starts,lengths))]
-    filters.append("".join(f"[v{i}]" for i in range(len(lengths))) + f"concat=n={len(lengths)}:v=1:a=0[out]")
-    subprocess.run(["ffmpeg","-nostdin","-v","error","-i",str(raw),"-filter_complex",";".join(filters),
-                    "-map","[out]","-an","-c:v","libx264","-preset","veryfast","-pix_fmt","yuv420p",
-                    "-movflags","+faststart","-n",str(clip)],check=True)
-    from footage import probe_seconds
-    actual=probe_seconds(clip)
-    if actual < 7.7: raise ValueError("录像实际时长不足")
-    labels = ["运行领取包", *[v["table"] for v in recipe["views"]]]
-    if product_image: labels[1] = "打开本次主图"
-    if action: labels.append(action["action"])
-    steps = [{"name":label, "start":round(sum(lengths[:i]),2), "end":round(sum(lengths[:i+1]),2)}
-             for i,label in enumerate(labels)]
+    highlights, steps, starts = edit_capture(raw, clip, action)
     pack = {"step": "s" + str(recipe["step"]), "product": recipe["title"], "recorder": "released-skill-report",
             "clip": clip.name, "recorded_at": datetime.datetime.now(datetime.timezone.utc).isoformat(), "review": "ok", "masked": False,
             "measured": {"items": run["summary"]["processed_rows"], "seconds": run["processing_seconds"]},
             "steps": steps,
-            "highlights": {"mid": {"start": 0, "dur": actual, "speed": 1}},
+            "highlights": highlights,
             "evidence": {"module": module, "raw_sha256": digest(raw), "source_starts": starts, "run_id": run["run_id"], "data_kind": "synthetic", "release_sha256": release["sha256"],
                          "skill_version": release["version"], "input_sha256": digest(sample), "report": report.relative_to(dest).as_posix(),
                          "report_sha256": digest(report), "result_sha256": digest(folder / "result.json"), "clip_sha256": digest(clip),

@@ -49,7 +49,7 @@ def footage_slots(script: dict, wanted, out: Path, evidence_pack=None) -> dict:
             for slot, h in (p.get("highlights") or {}).items():
                 wanted[slot] = (Path(p["dir"]) / p["clip"], float(h["start"]), float(h["dur"]), float(h.get("speed", 1)))
     foot = {}
-    for slot in {sc.get("slot") for sc in script["scenes"] if sc["type"] == "footage"}:
+    for slot in {sc.get("slot") for sc in script["scenes"] if sc["type"] == "footage" or sc.get("slot") == "hook"}:
         if slot in (wanted or {}):
             clip, start, dur, speed = wanted[slot]
             try: foot[slot] = extract(clip, Path(out) / "frames" / slot, start, dur, speed)

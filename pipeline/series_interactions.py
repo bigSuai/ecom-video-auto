@@ -17,12 +17,19 @@ def record_listing(page, skill, sample, mark):
         url = json.loads(server.stdout.readline())["url"]
         page.goto(url)
         page.locator("#product-select option").first.wait_for(state="attached")
-        page.add_style_tag(content="""main{max-width:100%;padding:10px 20px}h1,details,.actions small,#images,
-            label[for=images],#image-state,footer{display:none}.field{display:grid;grid-template-columns:110px 250px 1fr;
-            gap:10px;align-items:center;margin:3px 0}.field button{display:none}.field input,.field p,.field label{margin:0;
-            font-size:17px;padding:3px}#product-select{font-size:18px}form{margin:0}""")
+        page.add_style_tag(content="""main{max-width:100%;padding:12px 25px}h1,details,nav,main > p:last-of-type,
+            #images,label[for=images],#image-state,#save-draft,footer{display:none}
+            .demo{padding:5px 9px;font-size:16px;margin:4px 0}
+            label[for=product-select]{display:none}
+            #product-select{font-size:20px;width:100%}#current-identity{font-size:18px;margin:10px 0}
+            .field{display:grid;grid-template-columns:130px 290px 1fr;gap:14px;align-items:center;
+            margin:7px 0;padding:5px 10px;border:1px solid #d7e1de;border-radius:8px;background:#f5f8f6}
+            .field label,.field .readback{grid-column:auto;margin:0;font-size:20px}
+            .field button{display:none}.field input{font-size:22px;padding:5px 10px}
+            .field:focus-within{background:#dcefe7;border-color:#167052}
+            .actions{margin:12px 0}form{margin:0}#overall-state{font-size:21px;font-weight:750;margin:8px 0}""")
         mark(page, "#20eaea")
-        for product in products:
+        for index, product in enumerate(products):
             identity = " / ".join(str(product[k]) for k in ("platform","shop_id","sku","title"))
             page.select_option("#product-select", label=identity)
             for field in ("title","category","spec","price","stock"):
@@ -39,7 +46,11 @@ def record_listing(page, skill, sample, mark):
                     raise ValueError("网页字段读回失败："+field)
                 row[field] = value
             observed.append(row)
-            page.wait_for_timeout(1000)
+            if index + 1 == len(products):
+                mark(page, "#e820e8")
+                page.wait_for_timeout(1800)
+            else:
+                page.wait_for_timeout(1000)
     finally:
         server.terminate()
         server.wait(timeout=10)
@@ -77,7 +88,8 @@ def record_media(page, skill, folder, dest, mark):
     page.wait_for_timeout(850)
     page.get_by_role("button").click()
     page.wait_for_function("document.querySelector('#exported').textContent.length>0")
-    page.wait_for_timeout(3200)
+    mark(page, "#e820e8")
+    page.wait_for_timeout(3600)
     return {"action":"选择并导出本次主图","item":item["id"],"sha256":item["sha256"],
             "export":"selected/sources.json"}
 

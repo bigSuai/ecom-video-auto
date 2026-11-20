@@ -47,7 +47,7 @@ def load_catalog():
 
 def key_for(r, release, voice_cache=None):
     h = hashlib.sha256(json.dumps([r,release["sha256"]],sort_keys=True,ensure_ascii=False).encode())
-    paths = [Path(__file__), ROOT/"pipeline/series_evidence.py", ROOT/"pipeline/series_recipe.py"]
+    paths = [Path(__file__), ROOT/"pipeline/series_evidence.py", ROOT/"pipeline/series_recipe.py", SERIES/"hook.js"]
     paths.extend(sorted((SERIES / r["template"]).glob("*")) if r.get("template") else [SERIES/"workflow.js"])
     paths.extend(sorted((ROOT / "engine").glob("*.js")))
     paths.extend(ROOT / "pipeline" / filename for filename in (
@@ -120,6 +120,28 @@ def stage_voice(args, recipe, script, movie):
 
 def relative(out,p): return Path(p).relative_to(out).as_posix()
 
+def footage_edits(pack):
+    highlights = pack["highlights"]
+    if set(highlights) != {"hook", "mid"}:
+        raise ValueError("正式批量成片需有开头和中段两个实录槽")
+    hook, mid = highlights["hook"], highlights["mid"]
+    if hook["dur"] < 2.5 or mid["dur"] < 4 or hook["start"]+hook["dur"] > mid["start"]+.001:
+        raise ValueError("两个实录槽的时长或剪辑范围不符")
+    if any(not any(s.get("slot")==slot for s in pack["steps"]) for slot in highlights):
+        raise ValueError("实录槽缺少原片定位")
+    return highlights
+
+
+def hook_summary(recipe, pack, folder):
+    if recipe.get("interaction") == "listing":
+        action = read(folder/"interaction.json")
+        return f'本地实测  {len(action["products"])} 件  ·  逐项读回'
+    if recipe.get("interaction") == "media":
+        return "本机实录  ·  选中并导出主图"
+    if recipe["id"] == "ceramic-price":
+        return "已定位冲突  ·  原表第 2、3 行"
+    return f'本地实测  ·  处理 {pack["measured"]["items"]} 行'
+
 
 def build_item(args, recipe, item, key, release, skill, browser, save):
     import make
@@ -135,13 +157,17 @@ def build_item(args, recipe, item, key, release, skill, browser, save):
     if args.mode=="capture": return item
     evidence=output/item["evidence"]
     pack=verified_evidence(evidence,release)
+    highlights=footage_edits(pack)
     movie=evidence.parent/("film-"+uuid.uuid4().hex[:8])
     script=prepare(recipe,movie)
+    script["scenes"][0].update(hook_status=hook_summary(recipe,pack,evidence),
+                               hook_result_at=next(s["end"] for s in pack["steps"] if s["slot"]=="hook"))
+    write(movie/"script.json",script)
     stage_voice(args,recipe,script,movie)
     # Each catalog entry is an authored, replayable edition. Project history belongs to ad-hoc topics.
-    slot=pack["highlights"]["mid"]
     clip=evidence/pack["clip"]
-    final=make.run(movie/"script.json",[f'mid={clip}:{slot["start"]}:{slot["dur"]}:{slot["speed"]}'],
+    footage=[f'{name}={clip}:{slot["start"]}:{slot["dur"]}:{slot["speed"]}' for name,slot in highlights.items()]
+    final=make.run(movie/"script.json",footage,
                    "voxcpm",reuse_voice=True,evidence_pack=pack,history_file=movie/"render-history.json")
     pub=read(movie/"publish.json")
     if (pub["pending_footage"] or pub["visual_tier"]!="自写画面" or not pub["motion"]["ok"]
@@ -150,7 +176,15 @@ def build_item(args, recipe, item, key, release, skill, browser, save):
     subprocess.run(["ffmpeg","-nostdin","-v","error","-xerror","-i",str(final),"-map","0:v","-map","0:a","-f","null","-"],check=True)
     pub["audience_skill"]={"module":recipe["module"],"version":release["version"],"sha256":release["sha256"],
                            "keyword":recipe["keyword"],"archive":os.path.relpath(release["archive"],movie).replace(os.sep,"/")}
-    pub["recording"]={**pack["evidence"],"pack":os.path.relpath(evidence/"pack.json",movie).replace(os.sep,"/")}
+    timeline=read(movie/"timeline.json")
+    positions={scene.get("slot"):i for i,scene in enumerate(script["scenes"])}
+    spans=[0,*timeline["cuts"],timeline["dur"]]
+    positions_match = positions.get("hook")==0 and .25 <= spans[positions["mid"]]/timeline["dur"] <= .65
+    if not positions_match:
+        raise ValueError("实录应出现在首镜和中段")
+    pub["recording"]={**pack["evidence"],"pack":os.path.relpath(evidence/"pack.json",movie).replace(os.sep,"/"),
+                      "slots":{name:{**slot,"film_start":spans[positions[name]],"film_end":spans[positions[name]+1]}
+                               for name,slot in highlights.items()}}
     if recipe.get("template")=="ceramic":pub["visual_assets"]=[{"file":"cup-turntable.webp","source":"原创 Blender 白瓷杯，30 视角"}]
     write(movie/"publish.json",pub)
     item.update(status="ready",video=relative(output,final),publish=relative(output,movie/"publish.json"),

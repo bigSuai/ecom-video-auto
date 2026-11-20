@@ -21,6 +21,8 @@ def test_registered_episodes_are_authored_and_distributable(tmp_path):
             path = tmp_path / r["id"]
             script = prepare(r, path)
             assert all(sc.get("visual") for sc in script["scenes"])
+            assert script["scenes"][0]["slot"] == "hook"
+            assert script["scenes"][0]["visual"] == "live_hook"
             assert any(sc.get("slot") == "mid" for sc in script["scenes"])
             assert (path/"visual.js").is_file()
         assert not any("__pycache__" in n for n in z.namelist())
@@ -95,3 +97,17 @@ def test_keyword_returns_only_a_verified_ready_release(tmp_path):
     path.write_bytes(b"other contents")
     with pytest.raises(ValueError,match="不符"):
         resolve(tmp_path,"查价")
+
+
+def test_dual_capture_requires_distinct_traceable_slots():
+    from series_batch import footage_edits
+    hook = {"start": 0, "dur": 2.88, "speed": 1}
+    mid = {"start": 2.88, "dur": 4.96, "speed": 1}
+    pack = {"highlights": {"hook": hook, "mid": mid}, "steps": [{"slot": "hook"}, {"slot": "mid"}]}
+    assert footage_edits(pack) == pack["highlights"]
+    pack["highlights"] = {"mid": mid}
+    with pytest.raises(ValueError, match="开头和中段"):
+        footage_edits(pack)
+    pack["highlights"] = {"hook": hook, "mid": {**mid, "start": 0}}
+    with pytest.raises(ValueError, match="剪辑范围"):
+        footage_edits(pack)

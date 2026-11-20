@@ -21,7 +21,7 @@ def compile_script(script: dict, voice: dict, footage: dict, visual: Path | None
         scenes[i]["v"] = sid
     images = {im.get("scene"): im.get("file") for im in script.get("images") or [] if im.get("file")}
     for i, sc in enumerate(scenes):
-        if sc["type"] == "footage":
+        if sc["type"] == "footage" or sc.get("slot") == "hook":
             f = (footage or {}).get(sc.get("slot")) or {}
             if f.get("frames") and f.get("n"):
                 sc.update(frames=Path(f["frames"]).resolve().as_uri(), n=f["n"], speed=f.get("speed", 1))
