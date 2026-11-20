@@ -26,6 +26,10 @@ FORMATS = {
 
 def prepare(recipe, dest):
     import shutil
+    story_id = recipe["id"]
+    story = SERIES / "stories" / (story_id + ".js")
+    if not story.is_file():
+        raise ValueError("选题缺少专属分镜画面：" + story_id)
     dest.mkdir(parents=True, exist_ok=True)
     if recipe.get("template"):
         src = SERIES / recipe["template"]
@@ -36,7 +40,6 @@ def prepare(recipe, dest):
     else:
         module = recipe["module"]
         structure, hook, theme, mood = recipe.get("format") or FORMATS[module]
-        visual = SERIES / "workflow.js"
         heads = recipe["design"]
         types = ["photo","statement","footage","steps","reveal","cta"]
         scenes = [dict(type=kind, visual=vis, vo=vo, head=head,
@@ -45,7 +48,7 @@ def prepare(recipe, dest):
                   for kind,vis,vo,head in zip(types,["opening","compare","live","align","resolution","claim"],
                                               recipe["voice"],[heads[0],heads[1],["本地实录","查看运行报告"],heads[2],heads[5],["免费领取",recipe["keyword"]+"助手"]])]
         scenes[0]["image"] = recipe["image"]
-        scenes[1]["mascot"] = dict(pos="bottomRight",S=250,x=740,f=1450,pose="point",hop=[1.6,3.2])
+        scenes[1]["mascot"] = dict(pos="bottomRight",S=215,x=785,f=1450,pose="point",hop=[1.6,3.2])
         scenes[2].update(slot="mid", report_title="虚构样本 · 本次运行", report_note="来自观众领取包")
         scenes[3]["mid_hook"] = True
         scenes[4]["payoff"] = True
@@ -56,10 +59,12 @@ def prepare(recipe, dest):
                       images=[dict(scene=0,file=recipe["image"])],cta=dict(keyword=recipe["keyword"],platform="douyin"),scenes=scenes)
     script["id"] = recipe["id"]
     hook = script["scenes"][0]
-    hook.update(slot="hook", visual="live_hook")
-    scale = {"A":"件商品等着上架？", "B":"条商品资料怎么查？"}
-    if recipe["module"] in scale:
-        hook["scale_example"] = scale[recipe["module"]]
+    if not recipe.get("template"):
+        for scene in script["scenes"]:
+            scene["visual"] = f'{story_id}_{scene["visual"]}'
+    hook.update(slot="hook", visual=f"{story_id}_hook")
+    if story_id == "listing-queue":
+        hook["scale_example"] = "件商品等着上架？"
     middle = next(scene for scene in script["scenes"] if scene.get("slot") == "mid")
     if recipe.get("interaction") == "listing":
         middle.update(head=["网页连填","字段读回"], report_title="演示商家后台 · 连续录制",
@@ -67,9 +72,14 @@ def prepare(recipe, dest):
     elif recipe.get("interaction") == "media":
         middle.update(head=["选中主图","导出文件"], report_title="本机素材工具 · 实际导出",
                       report_note="当次生成 · 当次导出")
-    (dest/"visual.js").write_text(
-        visual.read_text(encoding="utf-8") + "\n" + (SERIES/"hook.js").read_text(encoding="utf-8"),
-        encoding="utf-8")
+    sources = [visual.read_text(encoding="utf-8")] if recipe.get("template") else [
+        "window.VISUALS = {outro: window.KIT.outro({grid:false})};"]
+    if story_id == "media-drafts":
+        shutil.copyfile(SERIES/"ceramic/cup-turntable.webp", dest/"cup-turntable.webp")
+    if story_id == "listing-queue":
+        sources.append((SERIES/"hook.js").read_text(encoding="utf-8"))
+    sources.extend(p.read_text(encoding="utf-8") for p in (SERIES/"story.js", story))
+    (dest/"visual.js").write_text("\n".join(sources),encoding="utf-8")
     write(dest/"script.json",script)
     return script
 

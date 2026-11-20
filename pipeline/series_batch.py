@@ -47,8 +47,11 @@ def load_catalog():
 
 def key_for(r, release, voice_cache=None):
     h = hashlib.sha256(json.dumps([r,release["sha256"]],sort_keys=True,ensure_ascii=False).encode())
-    paths = [Path(__file__), ROOT/"pipeline/series_evidence.py", ROOT/"pipeline/series_recipe.py", SERIES/"hook.js"]
-    paths.extend(sorted((SERIES / r["template"]).glob("*")) if r.get("template") else [SERIES/"workflow.js"])
+    paths = [Path(__file__), ROOT/"pipeline/series_evidence.py", ROOT/"pipeline/series_recipe.py",
+             SERIES/"story.js", SERIES/"stories"/(r["id"]+".js")]
+    if r.get("template"): paths.extend(sorted((SERIES / r["template"]).glob("*")))
+    if r["id"] == "listing-queue": paths.append(SERIES/"hook.js")
+    if r["id"] == "media-drafts": paths.append(SERIES/"ceramic/cup-turntable.webp")
     paths.extend(sorted((ROOT / "engine").glob("*.js")))
     paths.extend(ROOT / "pipeline" / filename for filename in (
         "compile_script.py", "make.py", "render.js", "compose.py", "mix.py", "audio.py", "motion_check.py", "footage.py"))

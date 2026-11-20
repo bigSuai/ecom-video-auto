@@ -22,10 +22,14 @@ def test_registered_episodes_are_authored_and_distributable(tmp_path):
             script = prepare(r, path)
             assert all(sc.get("visual") for sc in script["scenes"])
             assert script["scenes"][0]["slot"] == "hook"
-            assert script["scenes"][0]["visual"] == "live_hook"
+            assert script["scenes"][0]["visual"] == r["id"] + "_hook"
+            assert ("scale_example" in script["scenes"][0]) == (r["id"] == "listing-queue")
             assert any(sc.get("slot") == "mid" for sc in script["scenes"])
             assert (path/"visual.js").is_file()
         assert not any("__pycache__" in n for n in z.namelist())
+
+    with pytest.raises(ValueError, match="专属分镜"):
+        prepare(dict(catalog[0], id="new-ceramic-topic"), tmp_path/"unbound")
 
 
 def test_visuals_are_required_before_render(tmp_path):

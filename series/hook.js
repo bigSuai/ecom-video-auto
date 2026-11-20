@@ -1,4 +1,4 @@
-/* First-frame proof from the current skill run, with a separate scale illustration. */
+/* The warehouse-wide opening belongs to the listing queue story. */
 (() => {
   const K = window.KIT;
   const sans = '"Microsoft YaHei", "Noto Sans CJK SC", sans-serif';
@@ -37,27 +37,20 @@
     ctx.clearRect(0,0,1080,1920);
     laneField(ctx,t,accent);
     rectangle(ctx,48,105,984,460,'#102024e8',22);
-    const wide = Boolean(s.scale_example);
-    if (wide) {
-      text(ctx,'规模场景示意',82,152,34,accent);
-      text(ctx,'10,000',79,287,176,'#fbf8e6');
-      text(ctx,s.scale_example,87,425,66,accent);
-      text(ctx,'下方为本机实际运行',89,510,35,'#d5e2cf');
-      for (let i = 0; i < 7; i++) {
-        ctx.save();
-        const offset = (t * 88 + i * 34) % 238;
-        ctx.translate(799 + (i % 3) * 58, 104 + offset);
-        ctx.rotate(-.26 + .35 * Math.sin(i + t));
-        ctx.globalAlpha = .28 + .34 * (i % 3) / 2;
-        rectangle(ctx,0,0,93,57,i % 3 === 0 ? accent : '#7b9995',5);
-        rectangle(ctx,12,16,66,4,'#fff4cd',2);
-        rectangle(ctx,12,29,40,4,'#fff4cd',2);
-        ctx.restore();
-      }
-    } else {
-      text(ctx,'本机工作流 · 实际运行',82,158,34,accent);
-      text(ctx,s.head[0],82,305,100,'#fbf8e6');
-      text(ctx,s.head[1],82,429,100,accent);
+    text(ctx,'规模场景示意',82,152,34,accent);
+    text(ctx,'10,000',79,287,176,'#fbf8e6');
+    text(ctx,s.scale_example,87,425,66,accent);
+    text(ctx,'下方为本机实际运行',89,510,35,'#d5e2cf');
+    for (let i = 0; i < 7; i++) {
+      ctx.save();
+      const offset = (t * 88 + i * 34) % 238;
+      ctx.translate(799 + (i % 3) * 58, 104 + offset);
+      ctx.rotate(-.26 + .35 * Math.sin(i + t));
+      ctx.globalAlpha = .28 + .34 * (i % 3) / 2;
+      rectangle(ctx,0,0,93,57,i % 3 === 0 ? accent : '#7b9995',5);
+      rectangle(ctx,12,16,66,4,'#fff4cd',2);
+      rectangle(ctx,12,29,40,4,'#fff4cd',2);
+      ctx.restore();
     }
 
     const frame = H.frame(s, t);
@@ -84,7 +77,7 @@
       ctx.restore();
     }
   }
-  window.VISUALS.live_hook = {
+  window.VISUALS['listing-queue_hook'] = {
     bg:'#111e22',
     build(s,id) { return K.layers(id,'<canvas width="1080" height="1920" id="'+id+'hook_board"></canvas>'); },
     anim:render,
