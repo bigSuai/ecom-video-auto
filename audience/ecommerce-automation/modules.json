@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "version": "0.2.0",
+  "version": "0.2.1",
   "modules": {
     "A": {"name": "商品上架", "entrypoint": "listing", "reference": "references/A-listing.md", "tables": ["products"]},
     "B": {"name": "商品资料检查", "entrypoint": "catalog", "reference": "references/B-catalog.md", "tables": ["products"]},

@@ -11,6 +11,7 @@ function geometry(id, stage) {
   const screen = {width:960,height:540};
   const cup = {naturalWidth:1200};
   const canvas = new Proxy({}, {get: (_,method) => (...args) => {
+    if(method==='createLinearGradient'||method==='createRadialGradient')return {addColorStop(){}};
     if(['roundRect','rect','arc','lineTo','moveTo','drawImage'].includes(method)) {
       // Capture coarse silhouettes independently of color, titles and rotation timing.
       ops.push([method,...args.filter(Number.isFinite).map(n=>Math.round(n/32))]);
@@ -23,6 +24,9 @@ function geometry(id, stage) {
   vm.runInContext(source('story.js'),ctx);
   if(id==='listing-queue')vm.runInContext(source('hook.js'),ctx);
   vm.runInContext(source('stories/'+id+'.js'),ctx);
+  vm.runInContext(source('cinema.js'),ctx);
+  const module=catalog.find(item=>item.id===id).module;
+  ctx.window.installCinema(id,module,['hook','compare','live','align','resolution','claim'].map(s=>id+'_'+s));
   const sc={prices:['a','b'],values:['1','2','3'],head:['a','b'],hook_status:'result',scale_example:'demo'};
   ctx.window.VISUALS[id+'_'+stage].anim(sc,'s0_',1.1,helpers);
   return {signature:JSON.stringify(ops),proofFrames};

@@ -8,5 +8,7 @@
 - `series/catalog.json`、`series/workflow.js`、`series/hook.js`、`series/ceramic/render_porcelain.py`、`series/ceramic/visual.js` 与 `series/ceramic/script.json`
 - `tests/test_batch_series.py` 与 `tests/topic-stories.test.mjs`
 - `series/story.js` 与 `series/stories/` 下的分题动效代码
+- `series/cinema.js` 与 `pipeline/operation_capture.py`
+- `pipeline/proof_camera.py` 和 `tests/test_continuous_review.py`
 
 本 Fork 继承的代码及其中的上游部分、图片、品牌素材、配乐和音色依赖各自原有权利。本文件不授予这些内容的额外许可。上游为 [Annie-xunishangzhi/ecom-video-auto](https://github.com/Annie-xunishangzhi/ecom-video-auto)，本次以提交 `528086c2caea78ca8fae19eb0d0b35040e380771` 为基础。

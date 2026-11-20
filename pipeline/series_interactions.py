@@ -8,7 +8,7 @@ from claim_release import digest
 from series_recipe import read
 
 
-def record_listing(page, skill, sample, mark):
+def record_listing(page, skill, sample, mark, next_product=None):
     products = read(sample)["products"]
     server = subprocess.Popen([sys.executable, "-B", str(skill/"scripts/demo_backend.py"), "--port", "0"],
                               stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, encoding="utf-8")
@@ -34,8 +34,10 @@ def record_listing(page, skill, sample, mark):
             page.select_option("#product-select", label=identity)
             for field in ("title","category","spec","price","stock"):
                 widget = page.locator("#"+field)
-                widget.fill(str(product[field]))
-                page.wait_for_timeout(180)
+                widget.click()
+                widget.fill("")
+                widget.press_sequentially(str(product[field]),delay=45)
+                page.wait_for_timeout(110)
             page.locator("#verify-all").click()
             page.wait_for_function("document.querySelector('#overall-state').textContent.includes('awaiting_confirmation')")
             row = {"shop_id":product["shop_id"],"sku":product["sku"]}
@@ -46,6 +48,8 @@ def record_listing(page, skill, sample, mark):
                     raise ValueError("网页字段读回失败："+field)
                 row[field] = value
             observed.append(row)
+            if index == 0 and next_product:
+                next_product(page)
             if index + 1 == len(products):
                 mark(page, "#e820e8")
                 page.wait_for_timeout(1800)
@@ -62,16 +66,18 @@ def record_media(page, skill, folder, dest, mark):
     item = next(i for i in read(manifest)["items"] if i["type"]=="main_image")
     output = dest/"selected"
     cli = [sys.executable, "-B", str(skill/"scripts/ecommerce.py")]
+    def keep():
+        subprocess.run([*cli,"media-select","--item",item["id"],"--action","keep","--manifest",str(manifest)],capture_output=True,check=True,timeout=60)
+        return "已选中主图"
     def select_export():
-        for args in (["media-select","--item",item["id"],"--action","keep"],
-                     ["media-export","--destination",str(output)]):
-            subprocess.run([*cli,*args,"--manifest",str(manifest)],capture_output=True,check=True,timeout=60)
+        subprocess.run([*cli,"media-export","--destination",str(output),"--manifest",str(manifest)],capture_output=True,check=True,timeout=60)
         sources = read(output/"sources.json")
         files = [p for p in output.rglob("*") if p.is_file() and p.name != "sources.json"]
         if sources["exported_count"] != 1 or len(files) != 1 or digest(files[0]) != item["sha256"]:
             raise ValueError("选定的素材与导出文件不一致")
         return "已导出 1 份选中主图 · "+files[0].name
     page.expose_function("selectAndExport",select_export)
+    page.expose_function("keepMainImage",keep)
     page.goto((folder/"report.html").as_uri())
     image_uri = html.escape((folder/item["path"]).as_uri(), quote=True)
     page.set_content("""<meta charset="utf-8"><style>
@@ -80,16 +86,22 @@ def record_media(page, skill, folder, dest, mark):
         img{width:100%;max-height:90vh;object-fit:contain}button{background:#17563f;border:0;border-radius:8px;
         padding:10px 20px;color:white;font:inherit}#exported{font-size:22px;overflow-wrap:anywhere}</style>
         <img src="IMAGE_URI"><section><h2>本次生成的商品主图</h2>
-        <p>模板初稿 · 等待挑选</p><button>保留并导出主图</button><p id="exported"></p></section>
-        <script>document.querySelector('button').onclick=async e=>{e.target.disabled=true;
+        <p id="state">模板初稿 · 等待挑选</p><button id="keep">选定主图</button> <button id="export" disabled>导出文件</button><p id="exported"></p></section>
+        <script>document.querySelector('#keep').onclick=async e=>{e.target.disabled=true;document.querySelector('#state').textContent=await keepMainImage();document.querySelector('#export').disabled=false};
+        document.querySelector('#export').onclick=async e=>{e.target.disabled=true;
         document.querySelector('#exported').textContent=await selectAndExport()}</script>""".replace('IMAGE_URI',image_uri))
     page.wait_for_function("document.querySelector('img').naturalWidth>0")
     mark(page, "#20eaea")
     page.wait_for_timeout(850)
-    page.get_by_role("button").click()
+    from operation_capture import POINTER, point
+    page.evaluate(POINTER)
+    point(page,page.locator("#keep"))
+    page.wait_for_function("!document.querySelector('#export').disabled")
+    page.wait_for_timeout(650)
+    point(page,page.locator("#export"))
     page.wait_for_function("document.querySelector('#exported').textContent.length>0")
     mark(page, "#e820e8")
-    page.wait_for_timeout(3600)
+    page.wait_for_timeout(950)
     return {"action":"选择并导出本次主图","item":item["id"],"sha256":item["sha256"],
             "export":"selected/sources.json"}
 

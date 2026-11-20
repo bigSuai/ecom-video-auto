@@ -78,7 +78,9 @@ def prepare(recipe, dest):
         shutil.copyfile(SERIES/"ceramic/cup-turntable.webp", dest/"cup-turntable.webp")
     if story_id == "listing-queue":
         sources.append((SERIES/"hook.js").read_text(encoding="utf-8"))
-    sources.extend(p.read_text(encoding="utf-8") for p in (SERIES/"story.js", story))
+    sources.extend(p.read_text(encoding="utf-8") for p in (SERIES/"story.js", story, SERIES/"cinema.js"))
+    sources.append("window.installCinema(" + ", ".join(json.dumps(v) for v in
+                   (story_id,recipe["module"],[s["visual"] for s in script["scenes"]])) + ");")
     (dest/"visual.js").write_text("\n".join(sources),encoding="utf-8")
     write(dest/"script.json",script)
     return script

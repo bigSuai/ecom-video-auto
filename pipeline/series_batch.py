@@ -15,7 +15,7 @@ import zipfile
 
 from claim_release import build_release, digest
 from series_recipe import ROOT, SERIES, prepare, read, write
-from series_evidence import run_and_record
+from operation_capture import run_capture as run_and_record
 
 
 @contextmanager
@@ -48,7 +48,8 @@ def load_catalog():
 def key_for(r, release, voice_cache=None):
     h = hashlib.sha256(json.dumps([r,release["sha256"]],sort_keys=True,ensure_ascii=False).encode())
     paths = [Path(__file__), ROOT/"pipeline/series_evidence.py", ROOT/"pipeline/series_recipe.py",
-             SERIES/"story.js", SERIES/"stories"/(r["id"]+".js")]
+             ROOT/"pipeline/operation_capture.py", ROOT/"pipeline/proof_camera.py",
+             SERIES/"story.js", SERIES/"cinema.js", SERIES/"stories"/(r["id"]+".js")]
     if r.get("template"): paths.extend(sorted((SERIES / r["template"]).glob("*")))
     if r["id"] == "listing-queue": paths.append(SERIES/"hook.js")
     if r["id"] == "media-drafts": paths.append(SERIES/"ceramic/cup-turntable.webp")
@@ -57,6 +58,7 @@ def key_for(r, release, voice_cache=None):
         "compile_script.py", "make.py", "render.js", "compose.py", "mix.py", "audio.py", "motion_check.py", "footage.py"))
     if r.get("interaction"): paths.append(ROOT / "pipeline/series_interactions.py")
     if r.get("image"): paths.append(ROOT / "assets/images" / r["image"])
+    elif r["id"]=="ceramic-price": paths.append(ROOT/"assets/images/s2-sheet-errors.jpg")
     paths += [ROOT / "engine/index.html", ROOT / "assets/voice/ref.wav", ROOT / "assets/voice/ref.txt",
               ROOT / "assets/soundfont/GeneralUser-GS.sf2"]
     paths.extend(sorted((ROOT / "assets/mascot").glob("*.png")))
@@ -76,6 +78,8 @@ def verified_evidence(folder, release):
         if digest(folder/"interaction.json") != e["interaction_sha256"]:
             raise ValueError("浏览器操作记录与本次实录不匹配")
         action = read(folder/"interaction.json")
+        if "file" in action and digest(folder/action["file"]) != action["sha256"]:
+            raise ValueError("本次导出的复核记录已改变")
         if "export" in action:
             files = [f for f in (folder/action["export"]).parent.rglob("*") if f.is_file() and f.name != "sources.json"]
             if len(files)!=1 or digest(files[0]) != action["sha256"]:
@@ -96,8 +100,11 @@ def verified_evidence(folder, release):
 def can_reuse(item, key, release, mode, output):
     if not item or item.get("key") != key: return False
     try:
-        verified_evidence(output/item["evidence"], release)
+        pack=verified_evidence(output/item["evidence"], release)
         if mode == "capture": return True
+        if pack.get("recorder")=="continuous-workflow" and item.get("status")=="ready":
+            scenes=read((output/item["video"]).parent/"script.json")["scenes"]
+            if any(not s.get("pointer_focus") for s in scenes if s.get("slot") in ("hook","mid")): return False
         return item.get("status")=="ready" and all(digest(output/p)==sha for p,sha in item["files"].items()) and bool(item["files"])
     except (OSError,KeyError,ValueError):
         return False
@@ -138,11 +145,11 @@ def footage_edits(pack):
 def hook_summary(recipe, pack, folder):
     if recipe.get("interaction") == "listing":
         action = read(folder/"interaction.json")
-        return f'本地实测  {len(action["products"])} 件  ·  逐项读回'
+        return f'本次共 {len(action["products"])} 件  ·  逐字段读回'
     if recipe.get("interaction") == "media":
-        return "本机实录  ·  选中并导出主图"
+        return "本机实录  ·  打开当次素材清单"
     if recipe["id"] == "ceramic-price":
-        return "已定位冲突  ·  原表第 2、3 行"
+        return "已找到两条价格记录  ·  原表第 2、3 行"
     return f'本地实测  ·  处理 {pack["measured"]["items"]} 行'
 
 
@@ -163,6 +170,10 @@ def build_item(args, recipe, item, key, release, skill, browser, save):
     highlights=footage_edits(pack)
     movie=evidence.parent/("film-"+uuid.uuid4().hex[:8])
     script=prepare(recipe,movie)
+    from proof_camera import follow
+    focus=follow(evidence/pack["clip"],highlights)
+    for sc in script["scenes"]:
+        if sc.get("slot") in focus: sc["pointer_focus"]=focus[sc["slot"]]
     script["scenes"][0].update(hook_status=hook_summary(recipe,pack,evidence),
                                hook_result_at=next(s["end"] for s in pack["steps"] if s["slot"]=="hook"))
     write(movie/"script.json",script)

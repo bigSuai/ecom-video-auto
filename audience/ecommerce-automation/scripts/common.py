@@ -248,5 +248,7 @@ def write_outputs(out, result):
         if len(rows) > 1000:
             parts.append('<p>此预览显示前1000行，完整数据见CSV/JSON。</p>')
         parts.append('</section>')
-    parts.append('<h2>问题与指标定义</h2><pre>' + html.escape(json_text({k: result[k] for k in ('issues', 'metric_definitions') if k in result})) + '</pre></html>')
+    from review_page import inspector
+    parts.append('<h2>问题与指标定义</h2><pre>' + html.escape(json_text({k: result[k] for k in ('issues', 'metric_definitions') if k in result})) + '</pre>')
+    parts.append(inspector(result) + '</html>')
     (out / 'report.html').write_text(''.join(parts), encoding='utf-8')
